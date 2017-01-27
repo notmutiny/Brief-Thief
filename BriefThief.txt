@@ -8,7 +8,6 @@
 
 BriefThief.lua
 BriefThief.xml
-Colors.lua
 
 ## DISCLAIMER:
 ##
