@@ -1,4 +1,4 @@
-# Brief-Thief
+# Brief Thief
 A simple way of displaying information about stolen goods.
 
 https://i.imgur.com/r1oZsnT.png
