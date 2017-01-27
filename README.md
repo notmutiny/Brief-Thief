@@ -3,9 +3,7 @@ A simple way of displaying information about stolen goods.
 
 https://i.imgur.com/r1oZsnT.png
 
-# Brief-Thief
-
-How to use:
+# How to use:
 
 in chat window type
 
@@ -23,4 +21,8 @@ in chat window type
 
 displays automatically when stopped by guard
 
-Created by mutiny and Jackarunda
+#Created by
+
+mutiny and Jackarunda
+
+:^)
