@@ -9,13 +9,13 @@ How to use:
 
 in chat window type
 
-/loot  | shows
+/loot  -- prompts brief thief
 
-/lootr | change color to red
+/lootr -- change color to red
 
-/looto | change color to orange
+/looto -- change color to orange
 
-/looty | change color to yellow
+/looty -- change color to yellow
 
 (and follow on screen instructions if applicable)
 
