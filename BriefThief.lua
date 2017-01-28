@@ -19,10 +19,10 @@ BriefThief={
 		black="|c000000",
 		gray="|c888888"
 	},
-	curColor="white",
-	prevColor="white",
+	curColor="",
+	prevColor="",
 	defaultPersistentSettings={
-		color="white"
+		color="orange"
 	},
 	persistentSettings={}
 }
@@ -55,7 +55,7 @@ function BriefThief:ChangeColor(color)
 	if not(self.colors[newColor])then return end -- if the word they typed isn't a color we support then fuck em
 	if(newColor==self.curColor)then return end -- if we're already that color then fuck em
 	local OldHex,NewHex=self.colors[self.curColor],self.colors[newColor]
-	d(OldHex.."BriefThief: Changed color from "..self.curColor.." to "..NewHex..newColor..OldHex.."!|r")
+	d(OldHex.."Brief Thief has changed color from "..self.curColor.." to "..NewHex..newColor..OldHex.."!|r")
 	self.prevColor=self.curColor
 	self.curColor=newColor
 	self.persistentSettings.color=self.curColor -- save the setting in ESO settings file
