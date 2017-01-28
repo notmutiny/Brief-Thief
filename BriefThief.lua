@@ -1,65 +1,75 @@
 -- Global table
-BriefThief={}
-
-local self=BriefThief
-
--- Initialize
-function BriefThief:Initialize()
-    self.savedVariables = ZO_SavedVars:New("BriefThiefVars", self.version, nil, self.Default)
-    if self.savedVariables.color then
-        self.color = self.savedVariables.color
-        d("successfully loaded color")end
-    EVENT_MANAGER:UnregisterForEvent(self.name,EVENT_ADD_ON_LOADED)
-end
-
--- Variables
-self.version=1.1
-self.color={"|cffa700","orange"}
-self.prevColor={}
-self.pushChat=0
+BriefThief={
+	version=1.1,
+	colors={ 				-- this is what i'd call data-driven
+		red="|cff0000", 	-- all you gotta do to add new colors is just add entries to the table
+		green="|c00ff00", 	-- no if elseif polling, no changing code
+		blue="|c0000ff",
+		
+		cyan="|c00ffff",
+		magenta="c|ff00ff",
+		yellow="|cffff00",
+		
+		orange="|cffa700",
+		purple="|c8800aa",
+		pink="|cffaabb",
+		brown="|c554400",
+		
+		white="|cffffff",
+		black="|c000000",
+		gray="|c888888"
+	},
+	curColor="white",
+	prevColor="white",
+	defaultPersistentSettings={
+		color="white"
+	},
+	persistentSettings={}
+}
 
 -- Convienence Functions
-local function confirm()
-    if self.pushChat==0 then return end
-    if self.pushColor==0 then return end
-    self.color=self.prevColor
-    d(self.color[1].."Color has updated successfully.")
-    self.pushChat=0
-    self.pushColor=0
+local function TableLength(tab)
+	if not(tab) then return 0 end
+	local Result=0
+	for key,value in pairs(tab)do
+		Result=Result+1
+	end
+	return Result
 end
 
-local function broadcast()
-    if self.color[1]==self.prevColor[1] then return end
-    d(self.color[1].."Brief Thief has been set to |r"..self.prevColor[1]..""..self.prevColor[2].."|r"..self.color[1].."!")
-    d(self.prevColor[1].."Type /lootyes to confirm changes.|r")
-    self.pushChat=0
-end
-
- local function TableLength(tab)
-    if not(tab) then return 0 end
-    local Result=0
-    for key,value in pairs(tab)do
-        Result=Result+1
-    end
-    return Result
-end
 local function ShowAllItemInfo(item)
     for key,attribute in pairs(item)do
         d(tostring(i).." : "..tostring(j))
     end
 end
 
--- Savings still broke af
-local function save()
-    self.savedVariables.color = self.color
+-- Addon Member Vars
+function BriefThief:Initialize()
+	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.version,nil,self.defaultPersistentSettings) -- load in the persistent settings
+	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
+	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED) -- not really sure if we have to do this
 end
 
--- Addon Member Vars
-function self:GetInventory()
+function BriefThief:ChangeColor(color)
+	local newColor=color:lower() -- make the command case-insensitive
+	if not(self.colors[newColor])then return end -- if the word they typed isn't a color we support then fuck em
+	if(newColor==self.curColor)then return end -- if we're already that color then fuck em
+	local OldHex,NewHex=self.colors[self.curColor],self.colors[newColor]
+	d(OldHex.."BriefThief: Changed color from "..self.curColor.." to "..NewHex..newColor..OldHex.."!|r")
+	self.prevColor=self.curColor
+	self.curColor=newColor
+	self.persistentSettings.color=self.curColor -- save the setting in ESO settings file
+end
+
+function BriefThief:Chat(msg)
+	d(self.colors[self.curColor]..""..msg.."|r")
+end
+
+function BriefThief:GetInventory()
     return PLAYER_INVENTORY.inventories[INVENTORY_BACKPACK].slots
 end
 
-function self:Check()
+function BriefThief:Check()
     local StolenNumber,StolenValue,Inventory=0,0,self:GetInventory()
     for key,item in pairs(Inventory)do
         if(item.stolen)then
@@ -70,14 +80,15 @@ function self:Check()
     end
     local plural="s"
     if(StolenNumber==1)then plural="" end
-    d(self.color[1]..""..tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(StolenValue).." gold|r")
-end  
-  
--- Game hooks
-SLASH_COMMANDS["/lootyes"]=function() self.pushChat=1 confirm() end
-SLASH_COMMANDS["/lootsave"]=function() save() end
-SLASH_COMMANDS["/lootr"]=function() self.pushColor=1 self.prevColor={"|cff0000","red"} broadcast() end
-SLASH_COMMANDS["/looto"]=function() self.pushColor=1 self.prevColor={"|cffa700","orange"} broadcast() end
-SLASH_COMMANDS["/looty"]=function() self.pushColor=1 self.prevColor={"|cffff00","yellow"} broadcast() end
-SLASH_COMMANDS["/loot"]=function() self:Check() end
-EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() self:Check() end)
+    self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(StolenValue).." gold")
+end
+
+-- game hooks --
+SLASH_COMMANDS["/lootc"]=function(arg) BriefThief:ChangeColor(arg) end
+SLASH_COMMANDS["/loot"]=function() BriefThief:Check() end
+EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() BriefThief:Check() end)
+EVENT_MANAGER:RegisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED,function() BriefThief:Initialize() end)
+
+-- reference --
+-- self.savedVariables = ZO_SavedVars:New("BriefThiefVars", self.version, nil, self.Default)
+-- EVENT_MANAGER:UnregisterForEvent(self.name,EVENT_ADD_ON_LOADED)
