@@ -6,6 +6,9 @@ local self=BriefThief
 -- Initialize
 function BriefThief:Initialize()
     self.savedVariables = ZO_SavedVars:New("BriefThiefVars", self.version, nil, self.Default)
+    if self.savedVariables.color then
+        self.color = self.savedVariables.color
+        d("successfully loaded color")end
     EVENT_MANAGER:UnregisterForEvent(self.name,EVENT_ADD_ON_LOADED)
 end
 
@@ -48,10 +51,7 @@ end
 
 -- Savings still broke af
 local function save()
---	if self.savedVariables.color then
---    self.savedVariables.color = self.color
---    end
---    else return 0 end
+    self.savedVariables.color = self.color
 end
 
 -- Addon Member Vars
@@ -75,6 +75,7 @@ end
   
 -- Game hooks
 SLASH_COMMANDS["/lootyes"]=function() self.pushChat=1 confirm() end
+SLASH_COMMANDS["/lootsave"]=function() save() end
 SLASH_COMMANDS["/lootr"]=function() self.pushColor=1 self.prevColor={"|cff0000","red"} broadcast() end
 SLASH_COMMANDS["/looto"]=function() self.pushColor=1 self.prevColor={"|cffa700","orange"} broadcast() end
 SLASH_COMMANDS["/looty"]=function() self.pushColor=1 self.prevColor={"|cffff00","yellow"} broadcast() end
