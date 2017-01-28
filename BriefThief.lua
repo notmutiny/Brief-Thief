@@ -27,7 +27,7 @@ BriefThief={
 	persistentSettings={}
 }
 
--- Convienence Functions
+-- Convienence functions
 local function TableLength(tab)
 	if not(tab) then return 0 end
 	local Result=0
@@ -43,7 +43,7 @@ local function ShowAllItemInfo(item)
     end
 end
 
--- Addon Member Vars
+-- Addon member vars
 function BriefThief:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.version,nil,self.defaultPersistentSettings) -- load in the persistent settings
 	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
@@ -83,12 +83,17 @@ function BriefThief:Check()
     self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(StolenValue).." gold")
 end
 
--- game hooks --
-SLASH_COMMANDS["/lootc"]=function(arg) BriefThief:ChangeColor(arg) end
-SLASH_COMMANDS["/loot"]=function() BriefThief:Check() end
+-- Game hooks
+SLASH_COMMANDS["/loot"]=function(arg) 
+    if ((arg) and (arg~="")) then
+    BriefThief:ChangeColor(arg)
+    else BriefThief:Check()
+    end
+end
+
 EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() BriefThief:Check() end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED,function() BriefThief:Initialize() end)
 
--- reference --
+-- Reference
 -- self.savedVariables = ZO_SavedVars:New("BriefThiefVars", self.version, nil, self.Default)
 -- EVENT_MANAGER:UnregisterForEvent(self.name,EVENT_ADD_ON_LOADED)
