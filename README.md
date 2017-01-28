@@ -9,13 +9,7 @@ in chat window type
 
 /loot  -- prompts brief thief
 
-/lootr -- change color to red
-
-/looto -- change color to orange
-
-/looty -- change color to yellow
-
-(and follow on screen instructions if applicable)
+/loot (color) -- changes text color
 
 -and/or-
 
