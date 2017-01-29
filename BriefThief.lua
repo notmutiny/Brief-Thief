@@ -22,7 +22,7 @@ BriefThief={
 	curColor="",
 	prevColor="",
 	guards=true,
-	fence=true,
+	fences=true,
 	defaultPersistentSettings={
 		color="orange"
 	},
@@ -49,6 +49,8 @@ end
 function BriefThief:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.version,nil,self.defaultPersistentSettings) -- load in the persistent settings
 	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
+	self.guards=self.persistentSettings.guards
+	self.fences=self.persistentSettings.fences
 	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED) -- not really sure if we have to do this
 end
 
@@ -117,7 +119,7 @@ function BriefThief:GuardEventFix()
 end		
 
 function BriefThief:FenceEventFix()
-	if BriefThief.fence==false then end
+	if BriefThief.fences==false then end
     BriefThief:Check()
 end	
 
