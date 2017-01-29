@@ -102,7 +102,7 @@ end
 
 function BriefThief:ToggleEvent(passive,arg)
 	d(BriefThief.colors[BriefThief.curColor].."Brief Thief will "..passive.." help when talking to "..arg.."s|r")
-	if(arg==guard) then
+	if(arg=="guard") then
 		BriefThief.guards=not BriefThief.guards
 		BriefThief.persistentSettings.guards=BriefThief.guards
 	else
