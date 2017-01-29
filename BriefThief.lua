@@ -21,6 +21,8 @@ BriefThief={
 	},
 	curColor="",
 	prevColor="",
+	guards=true,
+	fenceFlag=true,
 	defaultPersistentSettings={
 		color="orange"
 	},
@@ -55,7 +57,7 @@ function BriefThief:ChangeColor(color)
 	if not(self.colors[newColor])then return end -- if the word they typed isn't a color we support then fuck em
 	if(newColor==self.curColor)then return end -- if we're already that color then fuck em
 	local OldHex,NewHex=self.colors[self.curColor],self.colors[newColor]
-	d(OldHex.."Brief Thief has changed color from "..self.curColor.." to "..NewHex..newColor..OldHex.."!|r")
+	d(OldHex.."Brief Thief has changed to "..NewHex..newColor..OldHex.."!|r")
 	self.prevColor=self.curColor
 	self.curColor=newColor
 	self.persistentSettings.color=self.curColor -- save the setting in ESO settings file
@@ -83,14 +85,44 @@ function BriefThief:Check()
     self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(StolenValue).." gold")
 end
 
+function BriefThief:ToggleEvent(arg)
+	if (arg=="guard") then
+		if  (BriefThief.guards) then
+			EVENT_MANAGER:UnregisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() BriefThief:Check() end)
+			d(BriefThief.colors[BriefThief.curColor].."Brief Thief will not help when talking to guards|r")
+			BriefThief.guards=false
+            BriefThief.persistentSettings.guards=BriefThief.guards
+		else
+			EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() BriefThief:Check() end)
+			d(BriefThief.colors[BriefThief.curColor].."Brief Thief will help when talking to guards|r")
+			BriefThief.guards=true
+            BriefThief.persistentSettings.guards=BriefThief.guards end
+	else if (arg=="fence") then
+		if  (BriefThief.fenceFlag) then
+			EVENT_MANAGER:UnregisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() BriefThief:Check() end)
+			d(BriefThief.colors[BriefThief.curColor].."Brief Thief will not help when talking to fences|r")
+			BriefThief.fenceFlag=false
+            BriefThief.persistentSettings.guards=BriefThief.guards
+        else
+			EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() BriefThief:Check() end)
+			d(BriefThief.colors[BriefThief.curColor].."Brief Thief will help when talking to fences|r")
+			BriefThief.fenceFlag=true
+            BriefThief.persistentSettings.guards=BriefThief.guards end
+		end		
+	end
+end
+
 -- Game hooks
 SLASH_COMMANDS["/loot"]=function(arg) 
-    if ((arg) and (arg~="")) then
+    if (arg=="guard" or arg=="fence") then BriefThief:ToggleEvent(arg)
+	else if ((arg) and (arg~="")) then
     BriefThief:ChangeColor(arg)
     else BriefThief:Check()
     end
 end
+end
 
+EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() BriefThief:Check() end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() BriefThief:Check() end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED,function() BriefThief:Initialize() end)
 
