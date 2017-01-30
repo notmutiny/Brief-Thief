@@ -48,6 +48,15 @@ local function ShowAllItemInfo(item)
 end
 
 -- Addon member vars
+function BriefThief:Help(arg,num)
+	local current=BriefThief.colors[BriefThief.curColor]
+	local yellow=BriefThief.colors.yellow
+	d(current.."- -|r"..yellow.."   - -|r"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -"..current.."    Brief Thief "..BriefThief.version.." help|r"..current.."    - -|r"..yellow.."   - -|r"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -"..current.."|r")
+	d(current.."/ loot  fence "..yellow.."-|r"..current.." / loot  guard "..yellow.."-|r"..current.." / loot  remind "..yellow.."-|r"..current.." / loot  (color)")
+	d(current.."Check updates:|r"..yellow.." http://github.com/mutenous/Brief-Thief|r")
+	d(current.."- -|r"..yellow.."   - -|r"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -"..current.."   - -|r")
+end
+
 function BriefThief:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.version,nil,self.defaultPersistentSettings) -- load in the persistent settings
 	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
@@ -129,15 +138,13 @@ function BriefThief:EventFix(who) -- this tells our registered events to not fir
 end		
 
 -- Game hooks
-SLASH_COMMANDS["/halp"]=function() d(BriefThief.showFence) end
-
 SLASH_COMMANDS["/loot"]=function(arg) 
     if (arg=="guard" or arg=="fence") then BriefThief:HandleEvent(arg)
-	else if ((arg) and (arg~="")) then
+	elseif (arg=="help") then BriefThief:Help(arg,num)
+	elseif ((arg) and (arg~="")) then
     BriefThief:ChangeColor(arg)
     else BriefThief:Check()
     end
-end
 end
 
 EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() BriefThief:EventFix("fence") end)
