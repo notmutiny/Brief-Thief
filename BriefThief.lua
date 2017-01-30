@@ -51,10 +51,10 @@ end
 function BriefThief:Help(arg,num)
 	local current=BriefThief.colors[BriefThief.curColor]
 	local yellow=BriefThief.colors.yellow
-	d(current.."- -|r"..yellow.."   - -|r"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -"..current.."    Brief Thief "..BriefThief.version.." help|r"..current.."    - -|r"..yellow.."   - -|r"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -"..current.."|r")
-	d(current.."/ loot  fence "..yellow.."-|r"..current.." / loot  guard "..yellow.."-|r"..current.." / loot  remind "..yellow.."-|r"..current.." / loot  (color)")
-	d(current.."Check updates:|r"..yellow.." http://github.com/mutenous/Brief-Thief|r")
-	d(current.."- -|r"..yellow.."   - -|r"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -"..current.."   - -|r"..yellow.."   - -|r"..current.."   - -"..current.."   - -|r")
+	self:Chat("- -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -"..yellow.."  - -|r"..current.."  Brief Thief "..BriefThief.version.." help|r"..yellow.."  - -|r"..current.."  - -"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -|r")
+	self:Chat("/ loot  fence "..yellow.." - |r"..current.." / loot  guard "..yellow.." - |r"..current.." / loot  notify "..yellow.." - |r"..current.." / loot  (color)")
+	self:Chat("Check updates:|r"..yellow.."  http://github.com/mutenous/Brief-Thief|r")
+	self:Chat("- -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -|r")
 end
 
 function BriefThief:Initialize()
