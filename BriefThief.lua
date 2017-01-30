@@ -1,6 +1,6 @@
 -- Global table
 BriefThief={
-	version=1.1,
+	version=1.6,
 	colors={ 				-- this is what i'd call data-driven
 		red="|cff0000", 	-- all you gotta do to add new colors is just add entries to the table
 		green="|c00ff00", 	-- no if elseif polling, no changing code
@@ -21,6 +21,8 @@ BriefThief={
 	},
 	curColor="",
 	prevColor="",
+	guards=true, -- saved settings variable (toggle guard event)
+	fences=true, -- saved settings variable (toggle fence event)
 	defaultPersistentSettings={
 		color="orange"
 	},
@@ -47,6 +49,8 @@ end
 function BriefThief:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.version,nil,self.defaultPersistentSettings) -- load in the persistent settings
 	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
+	self.guards=self.persistentSettings.guards -- sets briefthief to guard settings
+	self.fences=self.persistentSettings.fences -- sets briefthief to fence settings
 	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED) -- not really sure if we have to do this
 end
 
@@ -55,7 +59,7 @@ function BriefThief:ChangeColor(color)
 	if not(self.colors[newColor])then return end -- if the word they typed isn't a color we support then fuck em
 	if(newColor==self.curColor)then return end -- if we're already that color then fuck em
 	local OldHex,NewHex=self.colors[self.curColor],self.colors[newColor]
-	d(OldHex.."Brief Thief has changed color from "..self.curColor.." to "..NewHex..newColor..OldHex.."!|r")
+	d(OldHex.."Brief Thief has changed to "..NewHex..newColor)
 	self.prevColor=self.curColor
 	self.curColor=newColor
 	self.persistentSettings.color=self.curColor -- save the setting in ESO settings file
@@ -83,17 +87,57 @@ function BriefThief:Check()
     self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(StolenValue).." gold")
 end
 
+function BriefThief:HandleEvent(arg) -- this sorts where the /loot (event) arguement should go
+	if (arg=="guard") then
+		if (BriefThief.guards) then
+			BriefThief:ToggleEvent("not",arg)			
+		else
+			BriefThief:ToggleEvent("",arg) end
+	else if (arg=="fence") then
+		if (BriefThief.fences) then
+			BriefThief:ToggleEvent("not",arg)
+		else
+			BriefThief:ToggleEvent("",arg) end
+		end
+	end
+end
+
+function BriefThief:ToggleEvent(string,arg) -- this is the main function after the previous sorted it
+	if(string=="not") then
+		d(BriefThief.colors[BriefThief.curColor].."Brief Thief will "..string.." show when talking to "..arg.."s|r")
+	elseif(string=="") then
+		d(BriefThief.colors[BriefThief.curColor].."Brief Thief will show when talking to "..arg.."s|r")
+	else
+		return end
+	if(arg=="guard") then
+		BriefThief.guards=not BriefThief.guards
+		BriefThief.persistentSettings.guards=BriefThief.guards
+	else
+		BriefThief.fences=not BriefThief.fences	
+		BriefThief.persistentSettings.fences=BriefThief.fences	
+	end
+end
+
+function BriefThief:EventFix(who) -- this tells our registered events to not fire if user specified
+	if (who=="guard") then
+		if(BriefThief.guards) then BriefThief:Check() end
+	elseif (who=="fence") then
+		if(BriefThief.fences) then BriefThief:Check() end
+	else return end
+end		
+
 -- Game hooks
+SLASH_COMMANDS["/halp"]=function() d(BriefThief.fences) end
+
 SLASH_COMMANDS["/loot"]=function(arg) 
-    if ((arg) and (arg~="")) then
+    if (arg=="guard" or arg=="fence") then BriefThief:HandleEvent(arg)
+	else if ((arg) and (arg~="")) then
     BriefThief:ChangeColor(arg)
     else BriefThief:Check()
     end
 end
+end
 
-EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() BriefThief:Check() end)
+EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() BriefThief:EventFix("fence") end)
+EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() BriefThief:EventFix("guard") end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED,function() BriefThief:Initialize() end)
-
--- Reference
--- self.savedVariables = ZO_SavedVars:New("BriefThiefVars", self.version, nil, self.Default)
--- EVENT_MANAGER:UnregisterForEvent(self.name,EVENT_ADD_ON_LOADED)
