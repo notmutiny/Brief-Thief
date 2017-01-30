@@ -1,6 +1,6 @@
 -- Global table
 BriefThief={
-	version=1.5,
+	version=1.5.2,
 	colors={ 				-- this is what i'd call data-driven
 		red="|cff0000", 	-- all you gotta do to add new colors is just add entries to the table
 		green="|c00ff00", 	-- no if elseif polling, no changing code
@@ -102,8 +102,13 @@ function BriefThief:HandleEvent(arg)
 	end
 end
 
-function BriefThief:ToggleEvent(passive,arg)
-	d(BriefThief.colors[BriefThief.curColor].."Brief Thief will "..passive.." help when talking to "..arg.."s|r")
+function BriefThief:ToggleEvent(string,arg)
+	if(string=="not") then
+		d(BriefThief.colors[BriefThief.curColor].."Brief Thief will "..string.." show when talking to "..arg.."s|r")
+	elseif(string=="") then
+		d(BriefThief.colors[BriefThief.curColor].."Brief Thief will show when talking to "..arg.."s|r")
+	else
+		return end
 	if(arg=="guard") then
 		BriefThief.guards=not BriefThief.guards
 		BriefThief.persistentSettings.guards=BriefThief.guards
