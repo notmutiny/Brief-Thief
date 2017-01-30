@@ -13,6 +13,8 @@ in chat window type
 
 /loot (event) -- toggles event reg
 
+/loot help -- in case you forget
+
 -and/or-
 
 displays automatically when interracting with guard and/or fence
