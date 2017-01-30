@@ -1,6 +1,6 @@
 -- Global table
 BriefThief={
-	version=1.1,
+	version=1.4,
 	colors={ 				-- this is what i'd call data-driven
 		red="|cff0000", 	-- all you gotta do to add new colors is just add entries to the table
 		green="|c00ff00", 	-- no if elseif polling, no changing code
