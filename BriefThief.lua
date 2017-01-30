@@ -1,6 +1,6 @@
 -- Global table
 BriefThief={
-	version=1.6,
+	version=1.7,
 	colors={ 				-- this is what i'd call data-driven
 		red="|cff0000", 	-- all you gotta do to add new colors is just add entries to the table
 		green="|c00ff00", 	-- no if elseif polling, no changing code
@@ -21,10 +21,12 @@ BriefThief={
 	},
 	curColor="",
 	prevColor="",
-	guards=true, -- saved settings variable (toggle guard event)
-	fences=true, -- saved settings variable (toggle fence event)
+	showGuard=true,
+	showFence=true,
 	defaultPersistentSettings={
-		color="orange"
+		color="orange",
+		guard=true,
+		fence=true
 	},
 	persistentSettings={}
 }
@@ -49,8 +51,8 @@ end
 function BriefThief:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.version,nil,self.defaultPersistentSettings) -- load in the persistent settings
 	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
-	self.guards=self.persistentSettings.guards -- sets briefthief to guard settings
-	self.fences=self.persistentSettings.fences -- sets briefthief to fence settings
+	self.showGuard=self.persistentSettings.guard -- sets briefthief to guard settings
+	self.showFence=self.persistentSettings.fence -- sets briefthief to fence settings
 	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED) -- not really sure if we have to do this
 end
 
@@ -89,12 +91,12 @@ end
 
 function BriefThief:HandleEvent(arg) -- this sorts where the /loot (event) arguement should go
 	if (arg=="guard") then
-		if (BriefThief.guards) then
+		if (BriefThief.showGuard) then
 			BriefThief:ToggleEvent("not",arg)			
 		else
 			BriefThief:ToggleEvent("",arg) end
 	else if (arg=="fence") then
-		if (BriefThief.fences) then
+		if (BriefThief.showFence) then
 			BriefThief:ToggleEvent("not",arg)
 		else
 			BriefThief:ToggleEvent("",arg) end
@@ -110,24 +112,24 @@ function BriefThief:ToggleEvent(string,arg) -- this is the main function after t
 	else
 		return end
 	if(arg=="guard") then
-		BriefThief.guards=not BriefThief.guards
-		BriefThief.persistentSettings.guards=BriefThief.guards
+		BriefThief.showGuard=not BriefThief.showGuard
+		BriefThief.persistentSettings.guard=BriefThief.showGuard
 	else
-		BriefThief.fences=not BriefThief.fences	
-		BriefThief.persistentSettings.fences=BriefThief.fences	
+		BriefThief.showFence=not BriefThief.showFence	
+		BriefThief.persistentSettings.fence=BriefThief.showFence
 	end
 end
 
 function BriefThief:EventFix(who) -- this tells our registered events to not fire if user specified
 	if (who=="guard") then
-		if(BriefThief.guards) then BriefThief:Check() end
+		if(BriefThief.showGuard) then BriefThief:Check() end
 	elseif (who=="fence") then
-		if(BriefThief.fences) then BriefThief:Check() end
+		if(BriefThief.showFence) then BriefThief:Check() end
 	else return end
 end		
 
 -- Game hooks
-SLASH_COMMANDS["/halp"]=function() d(BriefThief.fences) end
+SLASH_COMMANDS["/halp"]=function() d(BriefThief.showFence) end
 
 SLASH_COMMANDS["/loot"]=function(arg) 
     if (arg=="guard" or arg=="fence") then BriefThief:HandleEvent(arg)
