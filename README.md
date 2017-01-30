@@ -11,6 +11,8 @@ in chat window type
 
 /loot (color) -- changes text color
 
+/loot (event) -- toggles event reg
+
 -and/or-
 
 displays automatically when stopped by guard
