@@ -1,6 +1,6 @@
 -- Global table
 BriefThief={
-	version=1.4,
+	version=1.1,
 	colors={ 				-- this is what i'd call data-driven
 		red="|cff0000", 	-- all you gotta do to add new colors is just add entries to the table
 		green="|c00ff00", 	-- no if elseif polling, no changing code
@@ -114,13 +114,13 @@ function BriefThief:ToggleEvent(passive,arg)
 end
 
 function BriefThief:GuardEventFix()
-	if BriefThief.guards==false then end
-    BriefThief:Check()
+	if (BriefThief.guards) then BriefThief:Check()
+    else return end
 end		
 
 function BriefThief:FenceEventFix()
-	if BriefThief.fences==false then end
-    BriefThief:Check()
+	if (BriefThief.fences) then BriefThief:Check()
+    else return end
 end	
 
 -- Game hooks
