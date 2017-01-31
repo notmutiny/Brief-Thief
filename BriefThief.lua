@@ -1,7 +1,7 @@
 -- Global table
 BriefThief={
-	version=1.7,
-	colors={ 				-- this is what i'd call data-driven
+    ver=1.8,
+    colors={ 				-- this is what i'd call data-driven
 		red="|cff0000", 	-- all you gotta do to add new colors is just add entries to the table
 		green="|c00ff00", 	-- no if elseif polling, no changing code
 		blue="|c0000ff",
@@ -18,27 +18,31 @@ BriefThief={
 		white="|cffffff",
 		black="|c000000",
 		gray="|c888888"
-	},
-	curColor="",
-	prevColor="",
-	showGuard=true,
-	showFence=true,
+	},       
+    curColor="",
+    prevColor="",
+    showGuard=true,
+    showFence=true,
+	showRemind=true,
 	defaultPersistentSettings={
 		color="orange",
 		guard=true,
-		fence=true
+		fence=true,
+		remind=true
 	},
 	persistentSettings={}
 }
 
+local brtf = BriefThief
+
 -- Convienence functions
 local function TableLength(tab)
-	if not(tab) then return 0 end
-	local Result=0
-	for key,value in pairs(tab)do
-		Result=Result+1
-	end
-	return Result
+    if not(tab) then return 0 end
+    local Result=0
+    for key,value in pairs(tab)do
+        Result=Result+1
+    end
+    return Result
 end
 
 local function ShowAllItemInfo(item)
@@ -47,20 +51,24 @@ local function ShowAllItemInfo(item)
     end
 end
 
--- Addon member vars
-function BriefThief:Help(arg,num)
-	local current=BriefThief.colors[BriefThief.curColor]
-	local yellow=BriefThief.colors.yellow
-	self:Chat("- -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -"..yellow.."  - -|r"..current.."  Brief Thief "..BriefThief.version.." help|r"..yellow.."  - -|r"..current.."  - -"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -|r")
-	self:Chat("/ loot  fence "..yellow.." - |r"..current.." / loot  guard "..yellow.." - |r"..current.." / loot  notify "..yellow.." - |r"..current.." / loot  (color)")
-	self:Chat("Check updates:|r"..yellow.."  http://github.com/mutenous/Brief-Thief|r")
-	self:Chat("- -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -|r"..yellow.."  - -|r"..current.."  - -|r")
+-- Addon member variables
+function BriefThief:Help()
+	local c,y,d=brtf.colors[brtf.curColor],brtf.colors.yellow,"  - -|r"
+	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c.."  Brief Thief "..brtf.ver.." help|r"..y..d..c..d..y..d..c..d..y..d..c..d)
+	self:Chat("/ loot  fence "..y.." - |r"..c.." / loot  guard "..y.." - |r"..c.." / loot  notify "..y.." - |r"..c.." / loot  (color)")
+	self:Chat("Check updates:|r"..y.."  http://github.com/mutenous/Brief-Thief|r")
+	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c..d..y.."  -"..c..d..y.."  -  -|r"..c..d..y.."  -"..c..d..y..d..c..d..y..d..c..d..y..d..c..d)
+end
+
+function BriefThief:Remind()
+	self:Chat("This is a placeholder string! |r")
 end
 
 function BriefThief:Initialize()
-	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.version,nil,self.defaultPersistentSettings) -- load in the persistent settings
+	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.ver,nil,self.defaultPersistentSettings) -- load in the persistent settings
 	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
 	self.showGuard=self.persistentSettings.guard -- sets briefthief to guard settings
+	self.showRemind=self.persistentSettings.remind -- sets briefthief to guard settings
 	self.showFence=self.persistentSettings.fence -- sets briefthief to fence settings
 	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED) -- not really sure if we have to do this
 end
@@ -77,7 +85,7 @@ function BriefThief:ChangeColor(color)
 end
 
 function BriefThief:Chat(msg)
-	d(self.colors[self.curColor]..""..msg.."|r")
+    d(self.colors[self.curColor]..msg.."|r")
 end
 
 function BriefThief:GetInventory()
@@ -98,55 +106,45 @@ function BriefThief:Check()
     self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(StolenValue).." gold")
 end
 
-function BriefThief:HandleEvent(arg) -- this sorts where the /loot (event) arguement should go
-	if (arg=="guard") then
-		if (BriefThief.showGuard) then
-			BriefThief:ToggleEvent("not",arg)			
-		else
-			BriefThief:ToggleEvent("",arg) end
-	else if (arg=="fence") then
-		if (BriefThief.showFence) then
-			BriefThief:ToggleEvent("not",arg)
-		else
-			BriefThief:ToggleEvent("",arg) end
-		end
-	end
-end
-
-function BriefThief:ToggleEvent(string,arg) -- this is the main function after the previous sorted it
-	if(string=="not") then
-		d(BriefThief.colors[BriefThief.curColor].."Brief Thief will "..string.." show when talking to "..arg.."s|r")
-	elseif(string=="") then
-		d(BriefThief.colors[BriefThief.curColor].."Brief Thief will show when talking to "..arg.."s|r")
-	else
-		return end
-	if(arg=="guard") then
-		BriefThief.showGuard=not BriefThief.showGuard
-		BriefThief.persistentSettings.guard=BriefThief.showGuard
-	else
-		BriefThief.showFence=not BriefThief.showFence	
-		BriefThief.persistentSettings.fence=BriefThief.showFence
-	end
-end
-
-function BriefThief:EventFix(who) -- this tells our registered events to not fire if user specified
-	if (who=="guard") then
-		if(BriefThief.showGuard) then BriefThief:Check() end
-	elseif (who=="fence") then
-		if(BriefThief.showFence) then BriefThief:Check() end
-	else return end
-end		
-
--- Game hooks
-SLASH_COMMANDS["/loot"]=function(arg) 
-    if (arg=="guard" or arg=="fence") then BriefThief:HandleEvent(arg)
-	elseif (arg=="help") then BriefThief:Help(arg,num)
-	elseif ((arg) and (arg~="")) then
-    BriefThief:ChangeColor(arg)
-    else BriefThief:Check()
+function BriefThief:ToggleEvent(who)
+    if (who=="guard") then
+        if (brtf.showGuard) then
+            self:Chat("Brief Thief will not show when talking to "..who.."s|r")
+	    	self.showGuard=not self.showGuard
+	    	self.persistentSettings.guard=self.showGuard
+        else
+            self:Chat("Brief Thief will show when talking to "..who.."s|r")
+	    	self.showGuard=not self.showGuard
+	    	self.persistentSettings.guard=self.showGuard
+        end
+    elseif (who=="fence") then
+        if (self.showFence) then
+            self:Chat("Brief Thief will not show when talking to "..who.."s|r")
+	    	self.showFence=not self.showFence
+	    	self.persistentSettings.fence=self.showFence
+        else
+            self:Chat("Brief Thief will show when talking to "..who.."s|r")
+	    	self.showFence=not self.showFence
+	    	self.persistentSettings.fence=self.showFence
+        end
     end
 end
 
-EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() BriefThief:EventFix("fence") end)
-EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() BriefThief:EventFix("guard") end)
-EVENT_MANAGER:RegisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED,function() BriefThief:Initialize() end)
+function BriefThief:PersistantHooks(who)
+    if (who=="guard") and (self.showGuard) then brtf:Check()
+    elseif (who=="fence") and (self.showFence) then brtf:Check()
+	end
+end
+
+-- Game hooks
+SLASH_COMMANDS["/loot"]=function(cmd)
+    if(cmd=="guard" or cmd=="fence") then brtf:ToggleEvent(cmd)
+    elseif (cmd=="help") then brtf:Help()
+    elseif (cmd=="remind") then brtf:Remind()
+    elseif ((cmd) and (cmd~="")) then brtf:ChangeColor(cmd)
+    else brtf:Check() end
+end
+
+EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() brtf:PersistantHooks("fence") end)
+EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() brtf:PersistantHooks("guard") end)
+EVENT_MANAGER:RegisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED,function() brtf:Initialize() end)
