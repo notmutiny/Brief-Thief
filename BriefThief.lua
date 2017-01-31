@@ -52,16 +52,16 @@ local function ShowAllItemInfo(item)
 end
 
 -- Addon member variables
-function BriefThief:Help()
+function BriefThief:Help() -- the following function builds the text box help menu
 	local c,y,d=brtf.colors[brtf.curColor],brtf.colors.yellow,"  - -|r"
 	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c.."  Brief Thief "..brtf.ver.." help|r"..y..d..c..d..y..d..c..d..y..d..c..d)
-	self:Chat("/ loot  fence "..y.." - |r"..c.." / loot  guard "..y.." - |r"..c.." / loot  notify "..y.." - |r"..c.." / loot  (color)")
+	self:Chat("/ loot  echo "..y.." - |r"..c.." / loot  fence "..y.." - |r"..c.." / loot  guard "..y.." - |r"..c.." / loot  (color)")
 	self:Chat("Check updates:|r"..y.."  http://github.com/mutenous/Brief-Thief|r")
 	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c..d..y.."  -"..c..d..y.."  -  -|r"..c..d..y.."  -"..c..d..y..d..c..d..y..d..c..d..y..d..c..d)
 end
 
-function BriefThief:Remind()
-	self:Chat("This is a placeholder string! |r")
+function BriefThief:Echo() -- coming soon, focused on recode not adds
+	self:Chat("This is a placeholder! Did I successfully return the string?|r")
 end
 
 function BriefThief:Initialize()
@@ -106,15 +106,15 @@ function BriefThief:Check()
     self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(StolenValue).." gold")
 end
 
-function BriefThief:ToggleEvent(who)
+function BriefThief:ToggleEvent(who) -- this controls /loot (event)
     if (who=="guard") then
         if (brtf.showGuard) then
             self:Chat("Brief Thief will not show when talking to "..who.."s|r")
-	    	self.showGuard=not self.showGuard
-	    	self.persistentSettings.guard=self.showGuard
+	    	self.showGuard=not self.showGuard -- flips boolean
+	    	self.persistentSettings.guard=self.showGuard -- saves to memory
         else
             self:Chat("Brief Thief will show when talking to "..who.."s|r")
-	    	self.showGuard=not self.showGuard
+	    	self.showGuard=not self.showGuard -- there must be a way to clean this
 	    	self.persistentSettings.guard=self.showGuard
         end
     elseif (who=="fence") then
@@ -130,17 +130,17 @@ function BriefThief:ToggleEvent(who)
     end
 end
 
-function BriefThief:PersistantHooks(who)
+function BriefThief:PersistantHooks(who) -- only way mutiny could figure out to "disable" events between sessions
     if (who=="guard") and (self.showGuard) then brtf:Check()
     elseif (who=="fence") and (self.showFence) then brtf:Check()
-	end
+	end -- I may not be good at coding but I am good at leaving things lost and confused
 end
 
 -- Game hooks
 SLASH_COMMANDS["/loot"]=function(cmd)
     if(cmd=="guard" or cmd=="fence") then brtf:ToggleEvent(cmd)
     elseif (cmd=="help") then brtf:Help()
-    elseif (cmd=="remind") then brtf:Remind()
+    elseif (cmd=="echo") then brtf:Echo()
     elseif ((cmd) and (cmd~="")) then brtf:ChangeColor(cmd)
     else brtf:Check() end
 end
