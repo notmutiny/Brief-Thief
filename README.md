@@ -9,13 +9,15 @@ in chat window type
 
 /loot  -- prompts brief thief
 
+/loot help -- brings up help menu
+
 /loot (color) -- changes text color
 
 /loot (event) -- toggles event reg
 
 -and/or-
 
-displays automatically when event is triggered
+displays automatically when interracting with guard and/or fence
 
 #Created by
 
