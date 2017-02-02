@@ -61,7 +61,7 @@ function BriefThief:Help() -- the following function builds the text box help me
 end
 
 function BriefThief:Echo() -- coming soon, focused on recode not adds
-	self:Chat("temporary string|r")
+	self:Chat("This is a temporary string! Did I display correctly?|r")
 end
 
 function BriefThief:Initialize()
@@ -94,7 +94,7 @@ end
 
 function BriefThief:Check()
     local StolenNumber,StolenValue,Inventory=0,0,self:GetInventory()
-	local bonus=( ZO_Fence_Manager:GetHagglingBonus() / 100 ) + 1
+	local bonus=( ZO_Fence_Manager:GetHagglingBonus() / 100 ) + 1 -- adds haggling perk bonus to total
     for key,item in pairs(Inventory)do
         if(item.stolen)then
             StolenNumber=StolenNumber+item.stackCount
@@ -104,7 +104,7 @@ function BriefThief:Check()
     end
     local plural="s"
     if(StolenNumber==1)then plural="" end
-	self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.floor(StolenValue*bonus)).." gold")
+	self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold")
 end
 
 function BriefThief:ToggleEvent(who) -- this controls /loot (event)
