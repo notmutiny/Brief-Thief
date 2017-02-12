@@ -64,7 +64,7 @@ end
 function BriefThief:Help() -- the following function builds the text box help menu
 	local c,y,d=brtf.colors[brtf.curColor],brtf.colors.yellow,"  - -|r"
 	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c.."  Brief Thief "..brtf.ver.." help|r"..y..d..c..d..y..d..c..d..y..d..c..d)
-	self:Chat("/ loot"..y.."  - -  |r"..c.." / loot  fence "..y.."  - -  |r"..c.." / loot  guard "..y.."  - -  |r"..c.." / loot  (color)")
+	self:Chat("/ loot  clem "..y.." - |r"..c.." / loot  fence "..y.." - |r"..c.." / loot  guard "..y.." - |r"..c.." / loot  (color)")
 	self:Chat("Check updates:|r"..y.."  http://github.com/mutenous/Brief-Thief|r")
 	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c..d..y.."  -"..c..d..y.."  -  -|r"..c..d..y.."  -"..c..d..y..d..c..d..y..d..c..d..y..d..c..d)
 end
@@ -100,9 +100,9 @@ function BriefThief:Check()
     end
     local plural,timer="s",GetTimeToClemencyResetInSeconds() -- adds clemency data as total seconds
     if(StolenNumber==1)then plural="" end -- string ocd
-	if (self.showClemency and timer ~= 0) then self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold. "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m remaining.|r")
+	if (self.showClemency and timer ~= 0) then self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold  - -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown|r")
 	else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold")
-	end
+	end -- mutiny thinks he did math correctly but he took retook algebra twice so who can be sure
 end
 
 function BriefThief:ToggleEvent(who) -- this controls /loot (event)
@@ -117,7 +117,7 @@ function BriefThief:ToggleEvent(who) -- this controls /loot (event)
 	    	self.persistentSettings.guard=self.showGuard
         end
     elseif (who=="fence") then
-        if (self.showFence) then
+        if (self.showFence) then 
             self:Chat("Brief Thief will not show when talking to "..who.."s|r")
 	    	self.showFence=not self.showFence
 	    	self.persistentSettings.fence=self.showFence
@@ -128,11 +128,11 @@ function BriefThief:ToggleEvent(who) -- this controls /loot (event)
         end
 	elseif (who=="clem" or who=="clemency") then
 		if (self.showClemency) then
-			self:Chat("Brief Thief will not show clemency timer.")
-			self.showClemency=not self.showClemency
-			self.persistentSettings.clemency=self.showClemency
+			self:Chat("Brief Thief will not show cooldown timer for clemency|r")
+			self.showClemency=not self.showClemency  -- note to self find out how to cut down on this code
+			self.persistentSettings.clemency=self.showClemency -- sigh
 		else
-			self:Chat("Brief Thief will show clemency timer.")
+			self:Chat("Brief Thief will show cooldown timer for clemency|r")
 			self.showClemency=not self.Clemency
 			self.persistentSettings.clemency=self.showClemency
 		end
