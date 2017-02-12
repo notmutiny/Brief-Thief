@@ -33,9 +33,18 @@ BriefThief={
 	persistentSettings={}
 }
 
-local brtf = BriefThief
+local brtf = BriefThief -- mutinys not typing that out every time sorry not sorry
 
--- Convienence functions
+function BriefThief:Initialize()
+	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.ver,nil,self.defaultPersistentSettings) -- load in the persistent settings
+	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
+	self.showGuard=self.persistentSettings.guard -- sets briefthief to guard settings
+	self.showRemind=self.persistentSettings.remind -- sets briefthief to guard settings
+	self.showFence=self.persistentSettings.fence -- sets briefthief to fence settings
+	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED) -- not really sure if we have to do this
+end
+
+-- Convienence functions --
 local function TableLength(tab)
     if not(tab) then return 0 end
     local Result=0
@@ -51,26 +60,17 @@ local function ShowAllItemInfo(item)
     end
 end
 
--- Addon member variables
+-- Addon member variables --
 function BriefThief:Help() -- the following function builds the text box help menu
 	local c,y,d=brtf.colors[brtf.curColor],brtf.colors.yellow,"  - -|r"
 	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c.."  Brief Thief "..brtf.ver.." help|r"..y..d..c..d..y..d..c..d..y..d..c..d)
-	self:Chat("/ loot  echo "..y.." - |r"..c.." / loot  fence "..y.." - |r"..c.." / loot  guard "..y.." - |r"..c.." / loot  (color)")
+	self:Chat("/ loot"..y.."  - -  |r"..c.." / loot  fence "..y.."  - -  |r"..c.." / loot  guard "..y.."  - -  |r"..c.." / loot  (color)")
 	self:Chat("Check updates:|r"..y.."  http://github.com/mutenous/Brief-Thief|r")
 	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c..d..y.."  -"..c..d..y.."  -  -|r"..c..d..y.."  -"..c..d..y..d..c..d..y..d..c..d..y..d..c..d)
 end
 
 function BriefThief:Echo() -- coming soon, focused on recode not adds
-	self:Chat("This is a placeholder! Did I successfully return the string?|r")
-end
-
-function BriefThief:Initialize()
-	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.ver,nil,self.defaultPersistentSettings) -- load in the persistent settings
-	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
-	self.showGuard=self.persistentSettings.guard -- sets briefthief to guard settings
-	self.showRemind=self.persistentSettings.remind -- sets briefthief to guard settings
-	self.showFence=self.persistentSettings.fence -- sets briefthief to fence settings
-	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED) -- not really sure if we have to do this
+	self:Chat("This is a temporary string! Did I display correctly?|r")
 end
 
 function BriefThief:ChangeColor(color)
@@ -94,6 +94,7 @@ end
 
 function BriefThief:Check()
     local StolenNumber,StolenValue,Inventory=0,0,self:GetInventory()
+	local bonus=( ZO_Fence_Manager:GetHagglingBonus() / 100 ) + 1 -- adds haggling perk bonus to total
     for key,item in pairs(Inventory)do
         if(item.stolen)then
             StolenNumber=StolenNumber+item.stackCount
@@ -103,7 +104,7 @@ function BriefThief:Check()
     end
     local plural="s"
     if(StolenNumber==1)then plural="" end
-    self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(StolenValue).." gold")
+	self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold")
 end
 
 function BriefThief:ToggleEvent(who) -- this controls /loot (event)
