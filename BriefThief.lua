@@ -1,6 +1,6 @@
 -- Global table
 BriefThief={
-    ver=1.8,
+    ver=1.9,
     colors={ 				-- this is what i'd call data-driven
 		red="|cff0000", 	-- all you gotta do to add new colors is just add entries to the table
 		green="|c00ff00", 	-- no if elseif polling, no changing code
@@ -23,25 +23,34 @@ BriefThief={
     prevColor="",
     showGuard=true,
     showFence=true,
-	showRemind=true,
+	showClemency=true,
 	defaultPersistentSettings={
 		color="orange",
 		guard=true,
 		fence=true,
-		remind=true
+		clemency=true
 	},
 	persistentSettings={}
 }
 
-local brtf = BriefThief
+local brtf = BriefThief -- mutinys not typing that out every time sorry not sorry
 
--- Convienence functions
+function BriefThief:Initialize()
+	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.ver,nil,self.defaultPersistentSettings) -- load in the persistent settings
+	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
+	self.showGuard=self.persistentSettings.guard -- sets briefthief to guard settings
+	self.showFence=self.persistentSettings.fence -- sets briefthief to fence settings
+	self.showClemency=self.persistentSettings.clemency -- sets briefthief to clemency settings
+	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED) -- not really sure if we have to do this
+--	self.CreateSettingsWindow()
+end
+
+-- Convienence functions --
 local function TableLength(tab)
     if not(tab) then return 0 end
     local Result=0
     for key,value in pairs(tab)do
-        Result=Result+1
-    end
+        Result=Result+1 end
     return Result
 end
 
@@ -51,26 +60,13 @@ local function ShowAllItemInfo(item)
     end
 end
 
--- Addon member variables
+-- Addon member variables --
 function BriefThief:Help() -- the following function builds the text box help menu
 	local c,y,d=brtf.colors[brtf.curColor],brtf.colors.yellow,"  - -|r"
 	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c.."  Brief Thief "..brtf.ver.." help|r"..y..d..c..d..y..d..c..d..y..d..c..d)
-	self:Chat("/ loot  echo "..y.." - |r"..c.." / loot  fence "..y.." - |r"..c.." / loot  guard "..y.." - |r"..c.." / loot  (color)")
+	self:Chat("/ loot"..y.."  - -  |r"..c.." / loot  fence "..y.."  - -  |r"..c.." / loot  guard "..y.."  - -  |r"..c.." / loot  (color)")
 	self:Chat("Check updates:|r"..y.."  http://github.com/mutenous/Brief-Thief|r")
 	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c..d..y.."  -"..c..d..y.."  -  -|r"..c..d..y.."  -"..c..d..y..d..c..d..y..d..c..d..y..d..c..d)
-end
-
-function BriefThief:Echo() -- coming soon, focused on recode not adds
-	self:Chat("This is a temporary string! Did I display correctly?|r")
-end
-
-function BriefThief:Initialize()
-	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.ver,nil,self.defaultPersistentSettings) -- load in the persistent settings
-	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
-	self.showGuard=self.persistentSettings.guard -- sets briefthief to guard settings
-	self.showRemind=self.persistentSettings.remind -- sets briefthief to guard settings
-	self.showFence=self.persistentSettings.fence -- sets briefthief to fence settings
-	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED) -- not really sure if we have to do this
 end
 
 function BriefThief:ChangeColor(color)
@@ -102,9 +98,11 @@ function BriefThief:Check()
             StolenValue=StolenValue+StackValue
         end
     end
-    local plural="s"
-    if(StolenNumber==1)then plural="" end
-	self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold")
+    local plural,timer="s",GetTimeToClemencyResetInSeconds() -- adds clemency data as total seconds
+    if(StolenNumber==1)then plural="" end -- string ocd
+	if (self.showClemency and timer ~= 0) then self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold. "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m remaining.|r")
+	else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold")
+	end
 end
 
 function BriefThief:ToggleEvent(who) -- this controls /loot (event)
@@ -128,6 +126,16 @@ function BriefThief:ToggleEvent(who) -- this controls /loot (event)
 	    	self.showFence=not self.showFence
 	    	self.persistentSettings.fence=self.showFence
         end
+	elseif (who=="clem" or who=="clemency") then
+		if (self.showClemency) then
+			self:Chat("Brief Thief will not show clemency timer.")
+			self.showClemency=not self.showClemency
+			self.persistentSettings.clemency=self.showClemency
+		else
+			self:Chat("Brief Thief will show clemency timer.")
+			self.showClemency=not self.Clemency
+			self.persistentSettings.clemency=self.showClemency
+		end
     end
 end
 
@@ -140,8 +148,8 @@ end
 -- Game hooks
 SLASH_COMMANDS["/loot"]=function(cmd)
     if(cmd=="guard" or cmd=="fence") then brtf:ToggleEvent(cmd)
+    elseif (cmd=="clem" or cmd=="clemency") then brtf:ToggleEvent(cmd)
     elseif (cmd=="help") then brtf:Help()
-    elseif (cmd=="echo") then brtf:Echo()
     elseif ((cmd) and (cmd~="")) then brtf:ChangeColor(cmd)
     else brtf:Check() end
 end
