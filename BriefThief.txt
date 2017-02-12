@@ -1,13 +1,11 @@
 ## Title: |cffa700Brief |cffdb00Thief|r
-## Description: A simple way to display thief info
-## Version: 1.7
+## Description: A simple way to display thief info. Show help with /loot help
+## Version: 1.8
 ## Author: mutiny and Jackarunda :^)
-## APIVersion: 100017
-## OptionalDependsOn: LibAddonMenu-2.0
+## APIVersion: 100018
 ## SavedVariables: BriefThiefVars
 
 BriefThief.lua
-BriefThief.xml
 
 ## DISCLAIMER:
 ##
