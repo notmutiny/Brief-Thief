@@ -21,10 +21,12 @@ BriefThief={
 	},       
     curColor="",
     prevColor="",
+	showDebug=false, -- makes it easier for mutiny to not break stuff
     showGuard=true,
     showFence=true,
 	showClemency=true,
 	defaultPersistentSettings={
+		debug=false,
 		color="orange",
 		guard=true,
 		fence=true,
@@ -40,9 +42,10 @@ function BriefThief:Initialize()
 	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
 	self.showGuard=self.persistentSettings.guard -- sets briefthief to guard settings
 	self.showFence=self.persistentSettings.fence -- sets briefthief to fence settings
+	self.showDebug=self.persistentSettings.debug -- sets briefthief to debug settings
 	self.showClemency=self.persistentSettings.clemency -- sets briefthief to clemency settings
 	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED) -- not really sure if we have to do this
---	self.CreateSettingsWindow()
+--	self.CreateSettingsWindow() -- reminder for mutiny
 end
 
 -- Convienence functions --
@@ -63,10 +66,10 @@ end
 -- Addon member variables --
 function BriefThief:Help() -- the following function builds the text box help menu
 	local c,y,d=brtf.colors[brtf.curColor],brtf.colors.yellow,"  - -|r"
-	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c.."  Brief Thief "..brtf.ver.." help|r"..y..d..c..d..y..d..c..d..y..d..c..d)
-	self:Chat("/ loot  clem "..y.." - |r"..c.." / loot  fence "..y.." - |r"..c.." / loot  guard "..y.." - |r"..c.." / loot  (color)")
-	self:Chat("Check updates:|r"..y.."  http://github.com/mutenous/Brief-Thief|r")
-	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c..d..y.."  -"..c..d..y.."  -  -|r"..c..d..y.."  -"..c..d..y..d..c..d..y..d..c..d..y..d..c..d)
+	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y.."  -|r"..c.."  Brief Thief "..brtf.ver.." help|r"..y.."  -|r"..c..d..y..d..c..d..y..d..c..d)
+	self:Chat(" /loot clem"..y..d..c.."  /loot fence"..y..d..c.."  /loot guard"..y..d..c.."  /loot (color)")
+	self:Chat("Check for updates:|r"..y.." http://github.com/mutenous/Brief-Thief|r")
+	self:Chat("- -|r"..y..d..c..d..y..d..c..d..y..d..c..d..y..d..c..d..y..d..c..d..y..d..c..d..y..d..c..d..y..d..c..d)
 end
 
 function BriefThief:ChangeColor(color)
@@ -90,7 +93,7 @@ end
 
 function BriefThief:Check()
     local StolenNumber,StolenValue,Inventory=0,0,self:GetInventory()
-	local bonus=( ZO_Fence_Manager:GetHagglingBonus() / 100 ) + 1 -- adds haggling perk bonus to total
+	local bonus=( ZO_Fence_Manager:GetHagglingBonus()/100 ) + 1 -- adds haggling perk bonus to total
     for key,item in pairs(Inventory)do
         if(item.stolen)then
             StolenNumber=StolenNumber+item.stackCount
@@ -100,43 +103,38 @@ function BriefThief:Check()
     end
     local plural,timer="s",GetTimeToClemencyResetInSeconds() -- adds clemency data as total seconds
     if(StolenNumber==1)then plural="" end -- string ocd
-	if (self.showClemency and timer ~= 0) then self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold  - -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown|r")
+	if (self.showClemency and timer ~= 0) then self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold  -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown|r")
 	else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold")
-	end -- mutiny thinks he did math correctly but he took retook algebra twice so who can be sure
+	end -- mutiny thinks he did the math correctly but he retook algebra twice so who can be sure
 end
 
 function BriefThief:ToggleEvent(who) -- this controls /loot (event)
-    if (who=="guard") then
-        if (brtf.showGuard) then
-            self:Chat("Brief Thief will not show when talking to "..who.."s|r")
-	    	self.showGuard=not self.showGuard -- flips boolean
-	    	self.persistentSettings.guard=self.showGuard -- saves to memory
-        else
-            self:Chat("Brief Thief will show when talking to "..who.."s|r")
-	    	self.showGuard=not self.showGuard -- there must be a way to clean this
-	    	self.persistentSettings.guard=self.showGuard
-        end
-    elseif (who=="fence") then
-        if (self.showFence) then 
-            self:Chat("Brief Thief will not show when talking to "..who.."s|r")
-	    	self.showFence=not self.showFence
-	    	self.persistentSettings.fence=self.showFence
-        else
-            self:Chat("Brief Thief will show when talking to "..who.."s|r")
-	    	self.showFence=not self.showFence
-	    	self.persistentSettings.fence=self.showFence
-        end
+	local snot=" " -- string not not snot
+	local cache=nil -- lets boolean print when debug is enabled
+	if (who=="guard") then
+		if self.showGuard then snot=" not "
+		else snot=" " end
+	    self.showGuard=not self.showGuard -- flips boolean
+		self.persistentSettings.guard=self.showGuard -- saves to memory
+		cache=self.showGuard
+	elseif (who=="fence") then
+		if self.showFence then snot=" not "
+		else snot=" "end
+	    self.showFence=not self.showFence
+		self.persistentSettings.fence=self.showFence
+		cache=self.showFence
 	elseif (who=="clem" or who=="clemency") then
-		if (self.showClemency) then
-			self:Chat("Brief Thief will not show cooldown timer for clemency|r")
-			self.showClemency=not self.showClemency  -- note to self find out how to cut down on this code
-			self.persistentSettings.clemency=self.showClemency -- sigh
-		else
-			self:Chat("Brief Thief will show cooldown timer for clemency|r")
-			self.showClemency=not self.Clemency
-			self.persistentSettings.clemency=self.showClemency
+		if self.showClemency then snot=" not "
+		else snot=" " end
+	    self.showClemency=not self.showClemency
+		self.persistentSettings.clemency=self.showClemency
+		cache=self.showClemency
 		end
-    end
+	local sevent="show when talking to "..who.."s|r" -- string for events
+	local sclem="show clemency skill timer|r" -- string for clemency
+	if (who=="clem" or who=="clemency") then self:Chat("Brief Thief will"..snot..sclem)
+	else self:Chat("Brief Thief will"..snot..sevent) end
+	if self.showDebug then d("show"..who.." boolean set to "..tostring(cache)) end
 end
 
 function BriefThief:PersistantHooks(who) -- only way mutiny could figure out to "disable" events between sessions
@@ -150,9 +148,12 @@ SLASH_COMMANDS["/loot"]=function(cmd)
     if(cmd=="guard" or cmd=="fence") then brtf:ToggleEvent(cmd)
     elseif (cmd=="clem" or cmd=="clemency") then brtf:ToggleEvent(cmd)
     elseif (cmd=="help") then brtf:Help()
+	elseif (cmd=="DEBUG") then if brtf.showDebug then d("Brief Thief debug disabled") else d("Brief Thief debug enabled") end brtf.showDebug=not brtf.showDebug brtf.persistentSettings.debug=brtf.showDebug
     elseif ((cmd) and (cmd~="")) then brtf:ChangeColor(cmd)
     else brtf:Check() end
 end
+
+SLASH_COMMANDS["/lootd"]=function() if brtf.showDebug then d("showGuard boolean "..tostring(brtf.showGuard).." - showFence boolean "..tostring(brtf.showFence).." - showClemency boolean "..tostring(brtf.showFence)) end end
 
 EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() brtf:PersistantHooks("fence") end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() brtf:PersistantHooks("guard") end)
