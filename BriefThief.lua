@@ -36,6 +36,7 @@ BriefThief={
 }
 
 local brtf = BriefThief -- mutinys not typing that out every time sorry not sorry
+local fcache = nil -- prevents spammy behavior
 
 function BriefThief:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.ver,nil,self.defaultPersistentSettings) -- load in the persistent settings
@@ -91,7 +92,7 @@ function BriefThief:GetInventory()
     return PLAYER_INVENTORY.inventories[INVENTORY_BACKPACK].slots
 end
 
-function BriefThief:Check()
+function BriefThief:Check(who)
     local StolenNumber,StolenValue,Inventory=0,0,self:GetInventory()
 	local bonus=( ZO_Fence_Manager:GetHagglingBonus()/100 ) + 1 -- adds haggling perk bonus to total
     for key,item in pairs(Inventory)do
@@ -102,11 +103,14 @@ function BriefThief:Check()
         end
     end
     local plural,timer="s",GetTimeToClemencyResetInSeconds() -- adds clemency data as total seconds
-    if(StolenNumber==1)then plural="" end -- string ocd
-	if (self.showClemency and timer ~= 0) then self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold  -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown|r")
-	else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold")
-	end -- mutiny thinks he did the math correctly but he retook algebra twice so who can be sure
+    if (StolenNumber==1) then plural="" end -- string ocd
+	if (who=="fence" and fcache==StolenValue) then return
+	else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold  -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown|r") fcache=StolenValue
+	end-- mutiny thinks he did the math correctly but he retook algebra twice so who can be sure
 end
+
+--if (self.showClemency and timer ~= 0) then 
+--else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold")
 
 function BriefThief:ToggleEvent(who) -- this controls /loot (event)
 	local snot=" " -- string not not snot
@@ -139,7 +143,7 @@ end
 
 function BriefThief:PersistantHooks(who) -- only way mutiny could figure out to "disable" events between sessions
     if (who=="guard") and (self.showGuard) then brtf:Check()
-    elseif (who=="fence") and (self.showFence) then brtf:Check()
+    elseif (who=="fence") and (self.showFence) then brtf:Check(who)
 	end -- I may not be good at coding but I am good at leaving things lost and confused
 end
 
@@ -153,8 +157,7 @@ SLASH_COMMANDS["/loot"]=function(cmd)
     else brtf:Check() end
 end
 
-SLASH_COMMANDS["/lootd"]=function() if brtf.showDebug then d("showGuard boolean "..tostring(brtf.showGuard).." - showFence boolean "..tostring(brtf.showFence).." - showClemency boolean "..tostring(brtf.showFence)) end end
-
+SLASH_COMMANDS["/lootd"]=function() d(tostring(fcache)) end
 EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() brtf:PersistantHooks("fence") end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() brtf:PersistantHooks("guard") end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED,function() brtf:Initialize() end)
