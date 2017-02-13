@@ -1,6 +1,6 @@
 ## Title: |cffa700Brief |cffdb00Thief|r
-## Description: A simple way to display thief info. Show help with /loot help
-## Version: 1.8
+## Description: A simple way to display thief info. Show info with /loot help
+## Version: 1.9
 ## Author: mutiny and Jackarunda :^)
 ## APIVersion: 100018
 ## SavedVariables: BriefThiefVars
