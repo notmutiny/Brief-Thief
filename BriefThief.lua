@@ -36,6 +36,7 @@ BriefThief={
 }
 
 local brtf = BriefThief -- mutinys not typing that out every time sorry not sorry
+local fcache = nil -- prevents chat spamage
 
 function BriefThief:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.ver,nil,self.defaultPersistentSettings) -- load in the persistent settings
@@ -91,7 +92,7 @@ function BriefThief:GetInventory()
     return PLAYER_INVENTORY.inventories[INVENTORY_BACKPACK].slots
 end
 
-function BriefThief:Check()
+function BriefThief:Check(who)
     local StolenNumber,StolenValue,Inventory=0,0,self:GetInventory()
 	local bonus=( ZO_Fence_Manager:GetHagglingBonus()/100 ) + 1 -- adds haggling perk bonus to total
     for key,item in pairs(Inventory)do
@@ -100,45 +101,41 @@ function BriefThief:Check()
             local StackValue=item.sellPrice*item.stackCount
             StolenValue=StolenValue+StackValue
         end
-    end
-    local plural,sclem,timer="s",nil,GetTimeToClemencyResetInSeconds() -- adds clemency data as total seconds
-    if(StolenNumber==1)then plural="" end -- string ocd
-	if (self.showClemency and timer ~= 0) then sclem="  -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown" else sclem="" end
- 	self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold"..sclem.."|r")
+    end	
+	local plural,sclem,timer="s",nil,GetTimeToClemencyResetInSeconds() -- timer adds clemency data as total seconds
+    if(StolenNumber==1)then plural="" end -- jackarunda string ocd
+	if(self.showClemency and timer ~= 0) then sclem="  -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown" else sclem="" end
+ 	if(who=="fence" and fcache==math.ceil(StolenValue*bonus)) then return else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold"..sclem.."|r") end
+	if(self.showDebug) then d("showClem "..tostring(self.showClemency).." - showGuard "..tostring(self.showGuard).." - showFence "..tostring(self.showFence).." - fcache "..tostring(fcache)) end -- prints debug line if enabled
+	if(who=="fence") then fcache=math.ceil(StolenValue*bonus) end -- if check came from fence then we save total value to fence cache
 end -- mutiny thinks he did the math correctly but he retook algebra twice so who can be sure
 
 function BriefThief:ToggleEvent(who) -- this controls /loot (event)
-	local snot=" " -- string not not snot
-	local cache=nil -- lets boolean print when debug is enabled
+	local snot,ecache,sevent=nil,nil,nil -- string not not snot,event cache,event string
 	if (who=="guard") then
-		if self.showGuard then snot=" not "
-		else snot=" " end
+		if self.showGuard then snot=" not " else snot=" " end
 	    self.showGuard=not self.showGuard -- flips boolean
 		self.persistentSettings.guard=self.showGuard -- saves to memory
-		cache=self.showGuard
+		ecache=self.showGuard -- temp saves for debug
 	elseif (who=="fence") then
-		if self.showFence then snot=" not "
-		else snot=" "end
+		if self.showFence then snot=" not " else snot=" "end
 	    self.showFence=not self.showFence
 		self.persistentSettings.fence=self.showFence
-		cache=self.showFence
+		ecache=self.showFence
 	elseif (who=="clem" or who=="clemency") then
-		if self.showClemency then snot=" not "
-		else snot=" " end
+		if self.showClemency then snot=" not " else snot=" " end
 	    self.showClemency=not self.showClemency
 		self.persistentSettings.clemency=self.showClemency
-		cache=self.showClemency
-		end
-	local sevent="show when talking to "..who.."s|r" -- string for events
-	local sclem="show clemency skill timer|r" -- string for clemency
-	if (who=="clem" or who=="clemency") then self:Chat("Brief Thief will"..snot..sclem)
-	else self:Chat("Brief Thief will"..snot..sevent) end
-	if self.showDebug then d("show"..who.." boolean set to "..tostring(cache)) end
+		ecache=self.showClemency
+	end
+	if (who=="clem" or who=="clemency") then sevent="show clemency cooldown timer|r" else sevent="show when talking to "..who.."s|r" end
+	self:Chat("Brief Thief will"..snot..sevent)
+	if self.showDebug then d("show"..who.." boolean set to "..tostring(ecache)) end
 end
 
 function BriefThief:PersistantHooks(who) -- only way mutiny could figure out to "disable" events between sessions
     if (who=="guard") and (self.showGuard) then brtf:Check()
-    elseif (who=="fence") and (self.showFence) then brtf:Check()
+    elseif (who=="fence") and (self.showFence) then brtf:Check(who)
 	end -- I may not be good at coding but I am good at leaving things lost and confused
 end
 
@@ -147,12 +144,14 @@ SLASH_COMMANDS["/loot"]=function(cmd)
     if(cmd=="guard" or cmd=="fence") then brtf:ToggleEvent(cmd)
     elseif (cmd=="clem" or cmd=="clemency") then brtf:ToggleEvent(cmd)
     elseif (cmd=="help") then brtf:Help()
-	elseif (cmd=="DEBUG") then if brtf.showDebug then d("Brief Thief debug disabled") else d("Brief Thief debug enabled") end brtf.showDebug=not brtf.showDebug brtf.persistentSettings.debug=brtf.showDebug
-    elseif ((cmd) and (cmd~="")) then brtf:ChangeColor(cmd)
+	elseif (cmd=="DEBUG") then -- for when mutiny breaks something
+		local sdebug=nil if brtf.showDebug then sdebug="|cff0000 disabled" else sdebug="|c00ff00 enabled" end
+		d(brtf.colors[brtf.curColor].."Brief Thief|r"..brtf.colors.yellow.." debug mode|r"..sdebug.."|r")
+		brtf.showDebug=not brtf.showDebug
+		brtf.persistentSettings.debug=brtf.showDebug
+    elseif (cmd and cmd~="") then brtf:ChangeColor(cmd)
     else brtf:Check() end
 end
-
-SLASH_COMMANDS["/lootd"]=function() if brtf.showDebug then d("showGuard boolean "..tostring(brtf.showGuard).." - showFence boolean "..tostring(brtf.showFence).." - showClemency boolean "..tostring(brtf.showFence)) end end
 
 EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() brtf:PersistantHooks("fence") end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() brtf:PersistantHooks("guard") end)
