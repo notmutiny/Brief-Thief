@@ -36,7 +36,7 @@ BriefThief={
 }
 
 local brtf = BriefThief -- mutinys not typing that out every time sorry not sorry
-local fcache = nil -- prevents spammy behavior
+local fcache = nil -- prevents chat spamage
 
 function BriefThief:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.ver,nil,self.defaultPersistentSettings) -- load in the persistent settings
@@ -101,16 +101,12 @@ function BriefThief:Check(who)
             local StackValue=item.sellPrice*item.stackCount
             StolenValue=StolenValue+StackValue
         end
-    end
-    local plural,timer="s",GetTimeToClemencyResetInSeconds() -- adds clemency data as total seconds
-    if (StolenNumber==1) then plural="" end -- string ocd
-	if (who=="fence" and fcache==StolenValue) then return
-	else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold  -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown|r") fcache=StolenValue
-	end-- mutiny thinks he did the math correctly but he retook algebra twice so who can be sure
-end
-
---if (self.showClemency and timer ~= 0) then 
---else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold")
+    end	
+	local plural,sclem,timer="s",nil,GetTimeToClemencyResetInSeconds() -- timer adds clemency data as total seconds
+    if(StolenNumber==1)then plural="" end -- jackarunda string ocd
+	if(self.showClemency and timer ~= 0) then sclem="  -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown" else sclem="" end
+ 	if(who=="fence" and fcache==StolenValue) then return else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold"..sclem.."|r") fcache=StolenValue end
+end -- mutiny thinks he did the math correctly but he retook algebra twice so who can be sure
 
 function BriefThief:ToggleEvent(who) -- this controls /loot (event)
 	local snot=" " -- string not not snot
@@ -158,6 +154,7 @@ SLASH_COMMANDS["/loot"]=function(cmd)
 end
 
 SLASH_COMMANDS["/lootd"]=function() d(tostring(fcache)) end
+
 EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() brtf:PersistantHooks("fence") end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() brtf:PersistantHooks("guard") end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED,function() brtf:Initialize() end)
