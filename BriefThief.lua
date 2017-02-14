@@ -101,12 +101,11 @@ function BriefThief:Check()
             StolenValue=StolenValue+StackValue
         end
     end
-    local plural,timer="s",GetTimeToClemencyResetInSeconds() -- adds clemency data as total seconds
+    local plural,sclem,timer="s",nil,GetTimeToClemencyResetInSeconds() -- adds clemency data as total seconds
     if(StolenNumber==1)then plural="" end -- string ocd
-	if (self.showClemency and timer ~= 0) then self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold  -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown|r")
-	else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold")
-	end -- mutiny thinks he did the math correctly but he retook algebra twice so who can be sure
-end
+	if (self.showClemency and timer ~= 0) then sclem="  -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown" else sclem="" end
+ 	self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold"..sclem.."|r")
+end -- mutiny thinks he did the math correctly but he retook algebra twice so who can be sure
 
 function BriefThief:ToggleEvent(who) -- this controls /loot (event)
 	local snot=" " -- string not not snot
