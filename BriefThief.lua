@@ -1,15 +1,17 @@
 BriefThief={
-	ver=2.1,
+	ver=2.4,
 	curColor="",
 	prevColor="",
 	debug=nil,
-	showGuard=nil,
-	guardString="",
-	showFence=nil,
-	fenceString="",
+	slash="",
+	guard=nil,
+	gstring="",
+	fence=nil,
+	fstring="",
 	clemency=nil,
 	defaultPersistentSettings={
 		debug=false,
+		slash="/loot",
 		color="orange",
 		guard=true,
 		gstring="when stopped",
@@ -22,16 +24,13 @@ BriefThief={
 		red="|cff0000", 	-- all you gotta do to add new colors is just add entries to the table
 		green="|c00ff00", 	-- no if elseif polling, no changing code
 		blue="|c0000ff",
-		
 		cyan="|c00ffff",
 		magenta="c|ff00ff",
 		yellow="|cffff00",
-		
 		orange="|cffa700",
 		purple="|c8800aa",
 		pink="|cffaabb",
 		brown="|c554400",
-		
 		white="|cffffff",
 		black="|c000000",
 		gray="|c888888"
@@ -44,10 +43,11 @@ local brtf=BriefThief
 function BriefThief:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.ver,nil,self.defaultPersistentSettings) -- load in the persistent settings
 	self.curColor=self.persistentSettings.color -- set our current color to whatever came from the settings file
-	self.showGuard=self.persistentSettings.guard -- sets briefthief to guard settings
-	self.guardString=self.persistentSettings.gstring -- saves gstring for future perving
-	self.showFence=self.persistentSettings.fence -- sets briefthief to fence settings
-	self.fenceString=self.persistentSettings.fstring -- sets fence settings string 
+	self.slash=self.persistentSettings.slash -- set our current color to whatever came from the settings file
+	self.guard=self.persistentSettings.guard -- sets briefthief to guard settings
+	self.gstring=self.persistentSettings.gstring -- saves gstring for future perving
+	self.fence=self.persistentSettings.fence -- sets briefthief to fence settings
+	self.fstring=self.persistentSettings.fstring -- sets fence settings string 
 	self.debug=self.persistentSettings.debug -- sets briefthief to debug settings
 	self.clemency=self.persistentSettings.clemency -- sets briefthief to clemency settings
 	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED)
@@ -79,33 +79,102 @@ function BriefThief:Check(who)
     if(StolenNumber==1) then plural="" end -- mandatory string ocd
 	if(self.clemency and timer ~= 0) then sclem="  -  "..(math.floor(timer/3600)).."h "..(math.ceil(timer%3600/60)).."m clemency cooldown" else sclem="" end -- string clemency
  	if(who=="fence" and fcache==math.ceil(StolenValue*bonus)) then return else self:Chat(tostring(StolenNumber).." stolen item"..plural.." worth "..tostring(math.ceil(StolenValue*bonus)).." gold"..sclem.." |r") end
-	if(self.debug) then self:Chat("clemency "..tostring(self.clemency).." - guards "..self.guardString:lower().." / "..tostring(self.showGuard).." - fence "..self.fenceString:lower().." / "..tostring(self.showFence).." - fcache "..tostring(fcache)) end -- prints debug line if enabled
+	if(self.debug) then self:Chat("clemency "..tostring(self.clemency).." - guards "..self.gstring:lower().." / "..tostring(self.guard).." - fence "..self.fstring:lower().." / "..tostring(self.fence).." - fcache "..tostring(fcache)) end -- prints debug line if enabled
 	if(who=="fence") then fcache=math.ceil(StolenValue*bonus) end -- if check came from fence then we save total value to fence cache
 end -- mutiny thinks he did the math correctly but he retook algebra twice so who can be sure
 
+function BriefThief:ToggleEvent(who) -- this controls /loot (event)
+	local snot,ecache,sevent,scache=nil,nil,nil,nil -- string not not snot,event cache,event string
+	if (who=="guard") then
+		if self.guard then snot=" not " else snot=" " end
+	    self.guard=not self.guard -- flips boolean
+		self.persistentSettings.guard=self.guard -- saves to memory
+		if self.guard then self.gstring="when stopped" self.persistentSettings.gstring=self.gstring
+		else self.gstring="never" self.persistentSettings.gstring=self.gstring end
+		scache,ecache=self.gstring,self.guard
+	elseif (who=="fence") then
+		if self.fence then snot=" not " else snot=" "end
+	    self.fence=not self.fence
+		self.persistentSettings.fence=self.fence
+		if self.fence then self.fstring="when selling" self.persistentSettings.fstring=self.fstring
+		else self.fstring="never" self.persistentSettings.fstring=self.fstring end
+		scache,ecache=self.fstring,self.fence
+	elseif (who=="clem" or who=="clemency") then
+		if self.clemency then snot=" not " else snot=" " end
+	    self.clemency=not self.clemency
+		self.persistentSettings.clemency=self.clemency
+		scache,ecache="",self.clemency
+	end
+	if (who=="clem" or who=="clemency") then sevent="show clemency cooldown timer" else sevent="show when talking to "..who.."s" end
+	self:Chat("Brief Thief will"..snot..sevent)
+	if self.debug then self:Chat("Brief Thief set "..who.." to show "..scache.." ["..tostring(ecache).."]") end
+--	CALLBACK_MANAGER:FireCallbacks("LAM-RefreshPanel", panel)
+end
+
 -- Settings --
+function BriefThief:ChangeColor(color,where)
+	local newColor=color:lower() -- make the command case-insensitive
+	if not(self.colors[newColor])then return end -- if the word they typed isn't a color we support then fuck em
+	if(newColor==self.curColor)then return end -- if we're already that color then fuck em
+	local OldHex,NewHex=self.colors[self.curColor],self.colors[newColor]
+	if (where=="chat" or self.debug) then brtf:Chat("Brief Thief has changed to "..newColor) end
+	self.prevColor=self.curColor
+	self.curColor=newColor
+	self.persistentSettings.color=self.curColor -- save the setting in ESO settings file
+end
+
+function BriefThief:PersistentCommand(cmd,who)
+    if who=="loot" then 
+		if self.slash ~="/loot" then return end
+    elseif who=="thief" then
+		if self.slash ~="/thief" then return end
+    else return end
+    if(cmd=="guard" or cmd=="fence") then brtf:ToggleEvent(cmd)
+    elseif (cmd=="clem" or cmd=="clemency") then brtf:ToggleEvent(cmd)
+    elseif (cmd=="help") then brtf:Help()
+	elseif (cmd=="DEBUG") then -- for when mutiny breaks something
+		local sdebug=nil if brtf.debug then sdebug="|cff0000 disabled" else sdebug="|c00ff00 enabled" end
+		d(brtf.colors[brtf.curColor].."Brief Thief|r"..brtf.colors.yellow.." debug mode|r"..sdebug.."|r")
+		brtf.debug=not brtf.debug
+		brtf.persistentSettings.debug=brtf.debug
+    elseif (cmd and cmd~="") then brtf:ChangeColor(cmd)
+    else brtf:Check() end
+end
+
 function BriefThief:UpdateClemency(value)
 	self.clemency=value
 	self.persistentSettings.clemency=self.clemency
 	if self.debug then self:Chat("Brief Thief set show clemency to "..tostring(self.clemency)) end
 end
 
+function BriefThief:CommandSettings(value)
+    self.slash=value
+    self.persistentSettings.slash=self.slash
+    if self.debug then self:Chat("Brief Thief set slash command to "..value) end
+end
+
 function BriefThief:SaveSettings(what,who)
 	if who=="guard" then
-		self.guardString=what
-		self.persistentSettings.gstring=self.guardString
-		if self.guardString=="when stopped" then self.showGuard=true
-		else self.showGuard=false end
-		self.persistentSettings.guard=self.showGuard
-		if self.debug then self:Chat("Brief Thief set show "..who.." to "..tostring(self.showGuard)) end
+		self.gstring=what
+		self.persistentSettings.gstring=self.gstring
+		if self.gstring=="when stopped" then self.guard=true
+		else self.guard=false end
+		self.persistentSettings.guard=self.guard
+		if self.debug then self:Chat("Brief Thief set "..who.." to "..self.gstring.."["..tostring(self.guard).."]") end
 	elseif who=="fence" then
-		self.fenceString=what
-		self.persistentSettings.fstring=self.fenceString
-		if self.fenceString=="when selling" then self.showFence=true
-		else self.showFence=false end
-		self.persistentSettings.fence=self.showFence
-		if self.debug then self:Chat("Brief Thief set show "..who.." to "..tostring(self.showFence)) end
+		self.fstring=what
+		self.persistentSettings.fstring=self.fstring
+		if self.fstring=="when selling" then self.fence=true
+		else self.fence=false end
+		self.persistentSettings.fence=self.fence
+		if self.debug then self:Chat("Brief Thief set show "..who.." to "..tostring(self.fence)) end
 	end
+end
+
+function BriefThief:PersistantHooks(who) -- only way mutiny could figure out to "disable" events between sessions
+    if (who=="guard") and (self.guard) then brtf:Check()
+    elseif (who=="fence") and (self.fence) then brtf:Check(who)
+	end -- I may not be good at coding but I am good at leaving things lost and confused
 end
 
 function BriefThief:CreateSettings()
@@ -114,7 +183,7 @@ function BriefThief:CreateSettings()
     local panelData = {
 	    type = "panel",
 	    name = "Brief Thief",
-	    displayName = "|cffa700Brief|r Thief",
+	    displayName = "|cffa700Brief Thief",
 	    author = "mutiny and Jackarunda :^)",
         version = tostring(self.ver),
 		registerForDefaults = true,
@@ -129,7 +198,6 @@ function BriefThief:CreateSettings()
          [2] = {
             type = "checkbox", 
             name = " Show clemency skill cooldown",
-			warning = "Requires clemency skill to do anything",
             width = "half",
             getFunc = function() return self.clemency end,
             setFunc = function(value) self:UpdateClemency(value) end,
@@ -140,7 +208,7 @@ function BriefThief:CreateSettings()
             choices = {"red","green","blue","cyan","magenta","yellow","orange","purple","pink","brown","white","black","gray"},
             width = "half",
             getFunc = function() return self.curColor end,
-            setFunc = function(value) end,
+            setFunc = function(value) self:ChangeColor(value) end,
             },
          [4] = {
             type = "header", -- START THIEF SETTINGS --
@@ -148,33 +216,46 @@ function BriefThief:CreateSettings()
             width = "full",
             },
         [5] = {
-            type = "description",
-            text = " Adjust when Brief Thief shows information. Save keybind in control settings.",
-            width = "full",           
+            type = "dropdown",
+            name = " Slash command",
+            choices = {"/loot","/thief"},
+			warning ="Using legacy chat commands to modify |cffdb00any|r options without using the settings panel will require ReloadUI to update selected settings",
+			width = "full",
+            getFunc = function() return self.slash end,
+            setFunc = function(value) self:CommandSettings(value) end,
             },
         [6] = {
             type = "divider",
             width = "full",           
             },
-         [7] = {
+		[7] = {
+            type = "description",
+            text = " Adjust when Brief Thief shows information. Save keybind in control settings.",
+            width = "full",           
+            },
+        [8] = {
+            type = "divider",
+            width = "full",           
+            },
+         [9] = {
             type = "dropdown",
             name = " Show on guards",
             choices = {"when stopped","never"},
-            width = "half",
-            getFunc = function() return self.guardString end,
+			width = "full",
+            getFunc = function() return self.gstring end,
             setFunc = function(value) brtf:SaveSettings(value,"guard") end,
             },
-         [8] = {
+         [10] = {
             type = "dropdown",
             name = " Show on fences",
             choices = {"when selling","never"},
-            width = "half",
-            getFunc = function() return self.fenceString end,
+            width = "full",
+            getFunc = function() return self.fstring end,
             setFunc = function(value) brtf:SaveSettings(value,"fence") end,
             },
-         [9] = {
+         [11] = {
             type = "submenu", -- START ABOUT MESSAGE --
-            name = "|cffa700About|r message",
+            name = "About message",
             width = "full",
 			controls= {
 				[1] = {
@@ -203,19 +284,11 @@ function BriefThief:CreateSettings()
 	LAM:RegisterAddonPanel("BriefThief", panelData)
 end
 -- Game hooks --
-SLASH_COMMANDS["/loot"]=function(cmd)
-    if(cmd=="guard" or cmd=="fence") then brtf:ToggleEvent(cmd)
-    elseif (cmd=="clem" or cmd=="clemency") then brtf:ToggleEvent(cmd)
-    elseif (cmd=="help") then brtf:Help()
-	elseif (cmd=="DEBUG") then -- for when mutiny breaks something
-		local sdebug=nil if brtf.debug then sdebug="|cff0000 disabled" else sdebug="|c00ff00 enabled" end
-		d(brtf.colors[brtf.curColor].."Brief Thief|r"..brtf.colors.yellow.." debug mode|r"..sdebug.."|r")
-		brtf.debug=not brtf.debug
-		brtf.persistentSettings.debug=brtf.debug
-    elseif (cmd and cmd~="") then brtf:ChangeColor(cmd)
-    else brtf:Check() end
-end
+SLASH_COMMANDS["/loot"]=function(cmd) brtf:PersistentCommand(cmd, "loot") end
+SLASH_COMMANDS["/thief"]=function(cmd) brtf:PersistentCommand(cmd, "thief") end
 
 SLASH_COMMANDS["//"]=function() if brtf.debug then ReloadUI() end end
 
+EVENT_MANAGER:RegisterForEvent("BriefThief_OpenFence",EVENT_OPEN_FENCE,function() brtf:PersistantHooks("fence") end)
+EVENT_MANAGER:RegisterForEvent("BriefThief_ArrestCheck",EVENT_JUSTICE_BEING_ARRESTED,function() brtf:PersistantHooks("guard") end)
 EVENT_MANAGER:RegisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED,function() BriefThief:Initialize() end)
