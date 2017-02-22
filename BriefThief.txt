@@ -1,9 +1,22 @@
 ## Title: |cffa700Brief |cffdb00Thief|r
-## Description: A simple way to display thief info. Show help with /loot help
-## Version: 1.8
+## Description: A simple way to display thief info. Show more with /loot help
+## Version: 1.9.1
 ## Author: mutiny and Jackarunda :^)
 ## APIVersion: 100018
 ## SavedVariables: BriefThiefVars
+## OptionalDependsOn:  LibAddonMenu-2.0
+
+libs\LibAddonMenu-2.0\LibStub\LibStub.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\LibAddonMenu-2.0.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\button.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\checkbox.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\description.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\divider.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\dropdown.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\editbox.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\header.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\panel.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\submenu.lua
 
 BriefThief.lua
 
