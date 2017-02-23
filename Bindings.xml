@@ -1,0 +1,9 @@
+<Bindings>
+	<Layer name="SI_KEYBINDINGS_LAYER_GENERAL">
+		<Category name="|cffa700Brief |cffdb00Thief|r">
+			<Action name="CHECK_LOOT">
+				<Down>BriefThief_CheckLoot()</Down>
+			</Action>
+		</Category>
+	</Layer>
+</Bindings>
