@@ -19,7 +19,7 @@ in chat window type
 
 displays automatically when interracting with guard and/or fence
 
-#Created by
+# Created by
 
 mutiny and Jackarunda
 
