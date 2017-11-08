@@ -3,15 +3,10 @@ A simple way of displaying information about stolen goods.
 
 https://i.imgur.com/r1oZsnT.png
 
-# How to use
+ # There's no info here!
+Check the ESOUI page. I update it with images and changelogs while the GitHub description is forgotten and outdated
 
-in chat window type
-
-/loot  -- prompts brief thief
-
--and/or-
-
-displays automatically when interracting with guard and/or fence
+http://www.esoui.com/downloads/info1588-BriefThief.html
 
 # Created by
 
