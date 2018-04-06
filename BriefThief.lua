@@ -21,7 +21,7 @@ BriefThief = {
 
 	persistentSettings = {},
 
-    colors = {
+	colors = {
 		red="|cff0000",
 		green="|c00ff00",
 		blue="|c0000ff",
@@ -44,7 +44,7 @@ local bt = BriefThief
 
 function bt:Initialize()
 	bt.persistentSettings=ZO_SavedVars:NewAccountWide("BriefThiefVars",self.ver,nil,self.defaultPersistentSettings) -- load in the persistent settings
-    ZO_CreateStringId("SI_BINDING_NAME_GetStolenItems_LOOT","GetStolenItems Loot")
+    	ZO_CreateStringId("SI_BINDING_NAME_GetStolenItems_LOOT","GetStolenItems Loot")
 	EVENT_MANAGER:UnregisterForEvent("BriefThief_OnLoaded",EVENT_ADD_ON_LOADED)
 	bt:RestorePreferences() -- apply persistent settings to addon
 	bt:CreateSettings() -- builds addons setting screen with LAM2
@@ -115,8 +115,8 @@ end
 -- handles calling /loot or /thief commands
 function bt:PersistentCommand(input, slash)
 	-- checks if slash command is user preferenced slash command
-    if (slash == "loot" and self.slash ~= "/loot") then return end
-    if (slash == "thief" and self.slash ~= "/thief") then return end
+	if (slash == "loot" and self.slash ~= "/loot") then return end
+	if (slash == "thief" and self.slash ~= "/thief") then return end
 	
 	-- figure out what the command is supposed to do
 	if (input == "guard") then bt:UpdateGuardPref()
